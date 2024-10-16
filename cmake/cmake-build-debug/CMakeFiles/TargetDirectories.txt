@@ -1,0 +1,3 @@
+C:/Users/colli/Desktop/vulkan-renderer/cmake/cmake-build-debug/CMakeFiles/VulkanRenderer.dir
+C:/Users/colli/Desktop/vulkan-renderer/cmake/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/colli/Desktop/vulkan-renderer/cmake/cmake-build-debug/CMakeFiles/rebuild_cache.dir

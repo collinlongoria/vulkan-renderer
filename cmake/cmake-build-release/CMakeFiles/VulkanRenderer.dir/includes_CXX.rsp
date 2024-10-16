@@ -1,0 +1,1 @@
+-I"C:/Users/colli/Desktop/vulkan-renderer/cmake/../include" -I"C:/Users/colli/Desktop/vulkan-renderer/cmake/../include/glfw" -I"C:/Users/colli/Desktop/vulkan-renderer/cmake/../include/glm" -isystem C:/VulkanSDK/1.3.296.0/Include
