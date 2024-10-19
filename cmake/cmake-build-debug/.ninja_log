@@ -1,0 +1,15 @@
+# ninja log v6
+5	752	7510280752489833	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/main.cpp.obj	df9f7a5e8592876
+2	872	7510280752459821	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj	2dace04a3adf811f
+872	1031	7510280761160637	C:/Users/Collin/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe	c770625b395fa79e
+8	466	7510295630784433	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/main.cpp.obj	df9f7a5e8592876
+5	594	7510295630749439	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj	2dace04a3adf811f
+595	703	7510295636650394	C:/Users/Collin/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe	c770625b395fa79e
+5	581	7510296537278261	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj	2dace04a3adf811f
+581	674	7510296543044328	C:/Users/Collin/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe	c770625b395fa79e
+8	361	7510312884622515	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/main.cpp.obj	df9f7a5e8592876
+5	583	7510312884592515	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj	2dace04a3adf811f
+583	693	7510312890373392	C:/Users/Collin/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe	c770625b395fa79e
+7	586	7510327550664194	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/main.cpp.obj	df9f7a5e8592876
+4	845	7510327550634387	CMakeFiles/VulkanRenderer.dir/C_/Users/Collin/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj	2dace04a3adf811f
+845	967	7510327559040210	C:/Users/Collin/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe	c770625b395fa79e

@@ -11,6 +11,9 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
+
+/* Related to Debug Messenger: */
+
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
@@ -38,6 +41,108 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
     return VK_FALSE;
 }
+
+static void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+    createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT; // structure type
+    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT; // specifies all the types of severities the callback will be called for
+    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT; // specifies which types of messages the callback is notified about
+    createInfo.pfnUserCallback = debugCallback; // pointer to the callback function
+    createInfo.pUserData = nullptr; // optional - will be passed along to the callback function
+}
+
+/*
+ * Debug struct (created in application) requires the vkCreateDebugUtilsMessengerEXT function
+ * This function is an extension, so it needs to be looked up using vkGetInstanceProcAddr
+ */
+static VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    }
+    else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
+static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+
+    if(func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
+
+/* Related to Physical Devices and Queue Families: */
+
+// struct for queue family indices
+struct QueueFamilyIndices {
+    std::optional<uint32_t> graphicsFamily;
+
+    // generic check for optional
+    bool isComplete() {
+        return graphicsFamily.has_value();
+    }
+};
+
+static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+    QueueFamilyIndices indices;
+
+    // get device's number of dedicated queue families
+    uint32_t queueFamilyCount = 0;
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+    // query for details about each available queue family
+    std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+    vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+    // find queue family that supports VK_QUEUE_GRAPHICS_BIT
+    int i = 0;
+    for(const auto& queueFamily : queueFamilies) {
+        if(queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+            indices.graphicsFamily = i;
+        }
+
+        // early exit if bit has already been found
+        if(indices.isComplete()) {
+            break;
+        }
+
+        i++;
+    }
+
+    return indices;
+}
+
+// helper function to check if a graphics card can perform needed operations
+static bool isDeviceSuitable(VkPhysicalDevice device) {
+    /*
+     * For the purposes of this, there is no need for any checks. Any Vulkan supporting graphics card will suffice.
+     * For keeping sufficient documentation for future reference, this function will check to make sure the graphics
+     * card supports geometry shaders.
+     */
+
+    // query device properties
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(device, &deviceProperties);
+
+    // query optional features
+    VkPhysicalDeviceFeatures deviceFeatures;
+    vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+    // query queue families
+    QueueFamilyIndices indices = findQueueFamilies(device);
+
+    // anything required should be returned as a boolean
+    return deviceFeatures.geometryShader && indices.isComplete();
+
+    // other ways of finding suitable GPU could be mapping scores to available cards, or simply allow user to choose from list of valid cards.
+}
+
+
+/* Class-Specific Function Definitions: */
 
 void HelloTriangle::run() {
     // this is just the engine loop
@@ -69,6 +174,87 @@ void HelloTriangle::initVulkan() {
     // setup the debug messenger
     setupDebugMessenger();
 
+    // retrieve graphics card
+    pickPhysicalDevice();
+
+    // create logical device
+    createLogicalDevice();
+
+}
+
+void HelloTriangle::createLogicalDevice() {
+    // query for available queue families
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+
+    VkDeviceQueueCreateInfo queueCreateInfo = {};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+    queueCreateInfo.queueCount = 1;
+
+    // assign priority to queue to influence scheduling of command buffer execution
+    float queuePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    // specify the set of device features to use; Queried with vkGetPhysicalDeviceFeatures
+    VkPhysicalDeviceFeatures deviceFeatures{};
+
+    // create the main create info structure
+    VkDeviceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+
+    // add pointers to the queue creation info and device feature structs
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+
+    createInfo.pEnabledFeatures = &deviceFeatures;
+
+    // enabledLayerCount and ppEnabledLayerNames are ignored by up-to-date implementations, still good to set them anyways
+    createInfo.enabledExtensionCount = 0;
+
+    if(enableValidationLayers) {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+    }
+    else {
+        createInfo.enabledLayerCount = 0;
+    }
+
+    // all done... create the vKCreateDevice
+    if(vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create logical device!");
+    }
+
+    // retrieve queue handles
+    // parameters are logical device, queue family, queue index, and a pointer to the variable to store queue handle in
+    // only creating a single queue from this family - simply use index 0
+    vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+}
+
+void HelloTriangle::pickPhysicalDevice() {
+    // query the number of available graphics cards
+    uint32_t deviceCount = 0;
+    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+
+    // sanity check: there is at least 1 graphics card available that supports vulkan
+    if (deviceCount == 0) {
+        throw std::runtime_error("failed to find GPUs with Vulkan support");
+    }
+
+    // allocate array to hold all physical device handles
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
+    // check for a physical device that meets requirements
+    for(const auto& device : devices) {
+        if(isDeviceSuitable(device)) {
+            physicalDevice = device;
+            break;
+        }
+    }
+
+    if(physicalDevice == VK_NULL_HANDLE) {
+        throw std::runtime_error("failed to find a suitable GPU");
+    }
 }
 
 void HelloTriangle::createInstance() {
@@ -101,13 +287,22 @@ void HelloTriangle::createInstance() {
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size()); // number of global extensions to enable
     createInfo.ppEnabledExtensionNames = extensions.data(); // pointer to an array of enabledExtensionCount containing the names of extensions to enable
 
+    // create a debug messenger (done outside the if statement so that it is not destroyed too early)
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+
     // enable validation layers, or set them to 0
     if(enableValidationLayers) {
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size()); // number of global layers to enable
         createInfo.ppEnabledLayerNames = validationLayers.data(); // pointer to an array of names of layers to enable
+
+        // populate the debug messenger
+        populateDebugMessengerCreateInfo(debugCreateInfo);
+        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
     }
     else {
         createInfo.enabledLayerCount = 0;
+
+        createInfo.pNext = nullptr;
     }
 
     // call helper function to validate extensions
@@ -122,31 +317,23 @@ void HelloTriangle::createInstance() {
      * 3. Pointer to the variable that stores the handle to the new object
      */
 
+    //
+
     // Error check the result - these always return either VK_SUCCESS or an error code
     if(result != VK_SUCCESS) {
         throw std::runtime_error("failed to create instance!");
     }
 }
 
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    } else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
+
 
 void HelloTriangle::setupDebugMessenger() {
     if(!enableValidationLayers) return;
 
-    VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-    createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    createInfo.pfnUserCallback = debugCallback;
-    createInfo.pUserData = nullptr; // Optional
+    VkDebugUtilsMessengerCreateInfoEXT createInfo;
+    populateDebugMessengerCreateInfo(createInfo);
 
+    // using the function created in the header (above class definition), create the extension object
     if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
         throw std::runtime_error("failed to set up debug messenger!");
     }
@@ -242,6 +429,15 @@ void HelloTriangle::mainLoop() {
 }
 
 void HelloTriangle::cleanup() {
+    // Can destroy this before instance since logical devices do not interact directly with instances
+    vkDestroyDevice(device, nullptr);
+
+    // If the debug validation layer is active, need to destroy that
+    // Need to destroy it first since it is directly tied to the instance
+    if(enableValidationLayers) {
+        DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+    }
+
     // Destory vulkan instance
     vkDestroyInstance(instance, nullptr);
 

@@ -11,6 +11,7 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vector>
+#include <optional>
 
 class HelloTriangle {
 public:
@@ -29,11 +30,16 @@ private:
     void validateExtensions(const char** extensions, uint32_t num_extensions); // validates all extensions are available
     bool checkValidationLayerSupport(); // checks for validation layer support
     void setupDebugMessenger(); // creates the debug messenger
+    void pickPhysicalDevice(); // looks for and selects a graphics card in the system that supports required features
+    void createLogicalDevice(); // creates a logical device
 
     // VARIABLES
     GLFWwindow* window; // The main window using GLFW
     VkInstance instance; // The instance is a connection between application and the Vulkan library
     VkDebugUtilsMessengerEXT debugMessenger; // The debug messenger informs Vulkan about the callback function
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; // Storage for selected graphics card
+    VkDevice device; // logical device to interface with physical device
+    VkQueue graphicsQueue; // handle to interface with queue
 };
 
 #endif //HELLOTRIANGLE_H
