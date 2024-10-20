@@ -6,10 +6,18 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
+#include <optional>
+#include <set>
 
 // constants for window resolution
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
+
+
+/* Related to Device Extensions */
+const std::vector<const char*> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
 
 
 /* Related to Debug Messenger: */
@@ -79,15 +87,20 @@ static void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMesse
 
 // struct for queue family indices
 struct QueueFamilyIndices {
+    // because the presentation is a queue specific feature, the problem is actually about finding a queue family that supports presenting to the surface we need
+    // its actually possible that the queue families supporting drawing commands and the ones supporting presentation do not overlap
+    // therefore we have to take into account that there could be a distinct presentation queue
+    // (most likely, these will be the same)
     std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
 
     // generic check for optional
     bool isComplete() {
-        return graphicsFamily.has_value();
+        return graphicsFamily.has_value() && presentFamily.has_value();
     }
 };
 
-static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
+static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
     QueueFamilyIndices indices;
 
     // get device's number of dedicated queue families
@@ -105,6 +118,14 @@ static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
             indices.graphicsFamily = i;
         }
 
+        // check for presentation support
+        VkBool32 presentSupport = false;
+        vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+
+        if(presentSupport) {
+            indices.presentFamily = i;
+        }
+
         // early exit if bit has already been found
         if(indices.isComplete()) {
             break;
@@ -117,7 +138,7 @@ static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
 }
 
 // helper function to check if a graphics card can perform needed operations
-static bool isDeviceSuitable(VkPhysicalDevice device) {
+static bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     /*
      * For the purposes of this, there is no need for any checks. Any Vulkan supporting graphics card will suffice.
      * For keeping sufficient documentation for future reference, this function will check to make sure the graphics
@@ -133,7 +154,7 @@ static bool isDeviceSuitable(VkPhysicalDevice device) {
     vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 
     // query queue families
-    QueueFamilyIndices indices = findQueueFamilies(device);
+    QueueFamilyIndices indices = findQueueFamilies(device, surface);
 
     // anything required should be returned as a boolean
     return deviceFeatures.geometryShader && indices.isComplete();
@@ -174,6 +195,9 @@ void HelloTriangle::initVulkan() {
     // setup the debug messenger
     setupDebugMessenger();
 
+    // creates surface object, right after creating the instance (and setting up debug, but that is irrelevant)
+    createSurface();
+
     // retrieve graphics card
     pickPhysicalDevice();
 
@@ -182,18 +206,53 @@ void HelloTriangle::initVulkan() {
 
 }
 
+/*
+ * CREATING A SURFACE DIRECTLY - without GLFW (exposing win32 functions and calling them)
+ *
+ * STEP 1 - includes required:
+ * #define CK_USE_PLATFORM_WIN32_KHR
+ * #define GLFW_INCLUDE_VULKAN
+ * #include <GLFW/glfw3.h>
+ * #define GLFW_EXPOSE_NATIVE_WIN32
+ * #include <GLFW/glfw3native.h>
+ *
+ * STEP 2 - populate struct
+ * VkWin32SurfaceCreateInfoKHR createINfo{};
+ * createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+ * createInfo.hwnd = glfwGetWin32Window(window);
+ * createInfo.hinstance = GetModuleHandle(nullptr);
+ *
+ * STEP 3 - create surface
+ * if(vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS){
+ *      throw std::runtime_error("failed to create window surface!");
+ * }
+ * (on linux, this is similarly done with vkCreateXcbSurfaceKHR)
+ */
+void HelloTriangle::createSurface() {
+    if(glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+        throw std::runtime_error("failed to create window surface!");
+    }
+}
+
 void HelloTriangle::createLogicalDevice() {
     // query for available queue families
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
-    VkDeviceQueueCreateInfo queueCreateInfo = {};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-    queueCreateInfo.queueCount = 1;
+    // create a set of all unique queue families that are necessary for the required queues
+    std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+    std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), indices.presentFamily.value()};
 
     // assign priority to queue to influence scheduling of command buffer execution
     float queuePriority = 1.0f;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    for(uint32_t queueFamily : uniqueQueueFamilies) {
+        VkDeviceQueueCreateInfo queueCreateInfo{};
+        queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queueCreateInfo.queueFamilyIndex = queueFamily;
+        queueCreateInfo.queueCount = 1;
+        queueCreateInfo.pQueuePriorities = &queuePriority;
+        queueCreateInfos.push_back(queueCreateInfo);
+    }
 
     // specify the set of device features to use; Queried with vkGetPhysicalDeviceFeatures
     VkPhysicalDeviceFeatures deviceFeatures{};
@@ -202,9 +261,9 @@ void HelloTriangle::createLogicalDevice() {
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
-    // add pointers to the queue creation info and device feature structs
-    createInfo.pQueueCreateInfos = &queueCreateInfo;
-    createInfo.queueCreateInfoCount = 1;
+    // VkDeviceCreateInfo points at the vector
+    createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
+    createInfo.pQueueCreateInfos = queueCreateInfos.data();
 
     createInfo.pEnabledFeatures = &deviceFeatures;
 
@@ -228,6 +287,8 @@ void HelloTriangle::createLogicalDevice() {
     // parameters are logical device, queue family, queue index, and a pointer to the variable to store queue handle in
     // only creating a single queue from this family - simply use index 0
     vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+    // also retrieve presentation queue handle
+    vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
 }
 
 void HelloTriangle::pickPhysicalDevice() {
@@ -246,7 +307,7 @@ void HelloTriangle::pickPhysicalDevice() {
 
     // check for a physical device that meets requirements
     for(const auto& device : devices) {
-        if(isDeviceSuitable(device)) {
+        if(isDeviceSuitable(device, surface)) {
             physicalDevice = device;
             break;
         }
@@ -437,6 +498,9 @@ void HelloTriangle::cleanup() {
     if(enableValidationLayers) {
         DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
     }
+
+    // Destroy Vulkan surface (created through GLFW here - but GLFW does not provide special function for destroying a surface)
+    vkDestroySurfaceKHR(instance, surface, nullptr);
 
     // Destory vulkan instance
     vkDestroyInstance(instance, nullptr);

@@ -10,8 +10,8 @@
  */
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
+
 #include <vector>
-#include <optional>
 
 class HelloTriangle {
 public:
@@ -32,6 +32,7 @@ private:
     void setupDebugMessenger(); // creates the debug messenger
     void pickPhysicalDevice(); // looks for and selects a graphics card in the system that supports required features
     void createLogicalDevice(); // creates a logical device
+    void createSurface(); // creates the surface object
 
     // VARIABLES
     GLFWwindow* window; // The main window using GLFW
@@ -40,6 +41,8 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE; // Storage for selected graphics card
     VkDevice device; // logical device to interface with physical device
     VkQueue graphicsQueue; // handle to interface with queue
+    VkSurfaceKHR surface; // Abstract type of surface to present rendered images to. Must be created right after instance creation, because it can influence physical device selection
+    VkQueue presentQueue; // handle to interface with presentation queue
 };
 
 #endif //HELLOTRIANGLE_H
