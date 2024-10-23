@@ -52,10 +52,18 @@ find_package(Vulkan REQUIRED)
 # Link Vulkan
 target_link_libraries(VulkanRenderer Vulkan::Vulkan)
 
+# find shaders directory
+set(SHADERS_DIR "${CMAKE_SOURCE_DIR}/../shaders")
+
 # Copy DLL files after building
 add_custom_command(TARGET VulkanRenderer POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
         $<$<CONFIG:Debug>:${GLFW_LIB_DEBUG}>
         $<$<CONFIG:Release>:${GLFW_LIB_RELEASE}>
         $<TARGET_FILE_DIR:VulkanRenderer>
+
+        # copy shaders folder
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${SHADERS_DIR}
+        $<TARGET_FILE_DIR:VulkanRenderer>/shaders
 )

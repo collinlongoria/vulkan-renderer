@@ -55,7 +55,7 @@ EQUALS = =
 CMAKE_SOURCE_DIR = C:\Users\colli\Desktop\vulkan-renderer\cmake
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-release
+CMAKE_BINARY_DIR = C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-debug
 
 # Include any dependencies generated for this target.
 include CMakeFiles/VulkanRenderer.dir/depend.make
@@ -72,7 +72,7 @@ CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTr
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj: CMakeFiles/VulkanRenderer.dir/includes_CXX.rsp
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj: C:/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj: CMakeFiles/VulkanRenderer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-release\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj"
 	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\G__~1.EXE $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj -MF CMakeFiles\VulkanRenderer.dir\C_\Users\colli\Desktop\vulkan-renderer\src\HelloTriangle.cpp.obj.d -o CMakeFiles\VulkanRenderer.dir\C_\Users\colli\Desktop\vulkan-renderer\src\HelloTriangle.cpp.obj -c C:\Users\colli\Desktop\vulkan-renderer\src\HelloTriangle.cpp
 
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.i: cmake_force
@@ -87,7 +87,7 @@ CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cp
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj: CMakeFiles/VulkanRenderer.dir/includes_CXX.rsp
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj: C:/Users/colli/Desktop/vulkan-renderer/src/main.cpp
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj: CMakeFiles/VulkanRenderer.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-release\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj"
 	C:\PROGRA~1\JETBRA~1\CLION2~1.1\bin\mingw\bin\G__~1.EXE $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj -MF CMakeFiles\VulkanRenderer.dir\C_\Users\colli\Desktop\vulkan-renderer\src\main.cpp.obj.d -o CMakeFiles\VulkanRenderer.dir\C_\Users\colli\Desktop\vulkan-renderer\src\main.cpp.obj -c C:\Users\colli\Desktop\vulkan-renderer\src\main.cpp
 
 CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.i: cmake_force
@@ -106,21 +106,21 @@ VulkanRenderer_OBJECTS = \
 # External object files for target VulkanRenderer
 VulkanRenderer_EXTERNAL_OBJECTS =
 
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/build.make
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: C:/Users/colli/Desktop/vulkan-renderer/cmake/../libraries/glfw/glfw3.dll
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: C:/VulkanSDK/1.3.296.0/Lib/vulkan-1.lib
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/linkLibs.rsp
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/objects1.rsp
-C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-release\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable C:\Users\colli\Desktop\vulkan-renderer\build\Release\VulkanRenderer.exe"
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp.obj
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/C_/Users/colli/Desktop/vulkan-renderer/src/main.cpp.obj
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/build.make
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: C:/Users/colli/Desktop/vulkan-renderer/cmake/../libraries/glfw/glfw3.dll
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: C:/VulkanSDK/1.3.296.0/Lib/vulkan-1.lib
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/linkLibs.rsp
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/objects1.rsp
+C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe: CMakeFiles/VulkanRenderer.dir/link.txt
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-debug\CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable C:\Users\colli\Desktop\vulkan-renderer\build\Debug\VulkanRenderer.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\VulkanRenderer.dir\link.txt --verbose=$(VERBOSE)
-	"C:\Program Files\JetBrains\CLion 2024.2.1\bin\cmake\win\x64\bin\cmake.exe" -E copy_if_different  C:/Users/colli/Desktop/vulkan-renderer/cmake/../libraries/glfw/glfw3.dll C:/Users/colli/Desktop/vulkan-renderer/build/Release
-	"C:\Program Files\JetBrains\CLion 2024.2.1\bin\cmake\win\x64\bin\cmake.exe" -E copy_directory C:/Users/colli/Desktop/vulkan-renderer/cmake/../shaders C:/Users/colli/Desktop/vulkan-renderer/build/Release/shaders
+	"C:\Program Files\JetBrains\CLion 2024.2.1\bin\cmake\win\x64\bin\cmake.exe" -E copy_if_different C:/Users/colli/Desktop/vulkan-renderer/cmake/../libraries/glfw/glfw3.dll  C:/Users/colli/Desktop/vulkan-renderer/build/Debug
+	"C:\Program Files\JetBrains\CLion 2024.2.1\bin\cmake\win\x64\bin\cmake.exe" -E copy_directory C:/Users/colli/Desktop/vulkan-renderer/cmake/../shaders C:/Users/colli/Desktop/vulkan-renderer/build/Debug/shaders
 
 # Rule to build all files generated by this target.
-CMakeFiles/VulkanRenderer.dir/build: C:/Users/colli/Desktop/vulkan-renderer/build/Release/VulkanRenderer.exe
+CMakeFiles/VulkanRenderer.dir/build: C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe
 .PHONY : CMakeFiles/VulkanRenderer.dir/build
 
 CMakeFiles/VulkanRenderer.dir/clean:
@@ -128,6 +128,6 @@ CMakeFiles/VulkanRenderer.dir/clean:
 .PHONY : CMakeFiles/VulkanRenderer.dir/clean
 
 CMakeFiles/VulkanRenderer.dir/depend:
-	$(CMAKE_COMMAND) -E cmake_depends "MinGW Makefiles" C:\Users\colli\Desktop\vulkan-renderer\cmake C:\Users\colli\Desktop\vulkan-renderer\cmake C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-release C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-release C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-release\CMakeFiles\VulkanRenderer.dir\DependInfo.cmake "--color=$(COLOR)"
+	$(CMAKE_COMMAND) -E cmake_depends "MinGW Makefiles" C:\Users\colli\Desktop\vulkan-renderer\cmake C:\Users\colli\Desktop\vulkan-renderer\cmake C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-debug C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-debug C:\Users\colli\Desktop\vulkan-renderer\cmake\cmake-build-debug\CMakeFiles\VulkanRenderer.dir\DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/VulkanRenderer.dir/depend
 

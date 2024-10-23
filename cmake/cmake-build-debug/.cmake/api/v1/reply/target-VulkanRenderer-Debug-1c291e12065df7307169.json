@@ -2,10 +2,10 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "C:/Users/Collin/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe"
+			"path" : "C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.exe"
 		},
 		{
-			"path" : "C:/Users/Collin/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.pdb"
+			"path" : "C:/Users/colli/Desktop/vulkan-renderer/build/Debug/VulkanRenderer.pdb"
 		}
 	],
 	"backtrace" : 1,
@@ -77,15 +77,15 @@
 			[
 				{
 					"backtrace" : 4,
-					"path" : "C:/Users/Collin/Desktop/vulkan-renderer/cmake/../include"
+					"path" : "C:/Users/colli/Desktop/vulkan-renderer/cmake/../include"
 				},
 				{
 					"backtrace" : 5,
-					"path" : "C:/Users/Collin/Desktop/vulkan-renderer/cmake/../include/glfw"
+					"path" : "C:/Users/colli/Desktop/vulkan-renderer/cmake/../include/glfw"
 				},
 				{
 					"backtrace" : 6,
-					"path" : "C:/Users/Collin/Desktop/vulkan-renderer/cmake/../include/glm"
+					"path" : "C:/Users/colli/Desktop/vulkan-renderer/cmake/../include/glm"
 				},
 				{
 					"backtrace" : 3,
@@ -124,7 +124,7 @@
 			},
 			{
 				"backtrace" : 2,
-				"fragment" : "C:\\Users\\Collin\\Desktop\\vulkan-renderer\\cmake\\..\\libraries\\glfw\\glfw3.dll",
+				"fragment" : "C:\\Users\\colli\\Desktop\\vulkan-renderer\\cmake\\..\\libraries\\glfw\\glfw3.dll",
 				"role" : "libraries"
 			},
 			{
@@ -162,13 +162,13 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "C:/Users/Collin/Desktop/vulkan-renderer/src/HelloTriangle.cpp",
+			"path" : "C:/Users/colli/Desktop/vulkan-renderer/src/HelloTriangle.cpp",
 			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "C:/Users/Collin/Desktop/vulkan-renderer/src/main.cpp",
+			"path" : "C:/Users/colli/Desktop/vulkan-renderer/src/main.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],

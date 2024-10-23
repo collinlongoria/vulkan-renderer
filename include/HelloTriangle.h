@@ -33,6 +33,12 @@ private:
     void pickPhysicalDevice(); // looks for and selects a graphics card in the system that supports required features
     void createLogicalDevice(); // creates a logical device
     void createSurface(); // creates the surface object
+    void createSwapChain(); // creates the swap chain
+    void createImageViews(); // creates the image views and populates the related vector
+    void createRenderPass(); // create render pass object
+    void createGraphicsPipeline(); // creates the graphics pipeline
+    void createFramebuffers(); // creates frame buffers
+    void createCommandPool(); // creates command pool
 
     // VARIABLES
     GLFWwindow* window; // The main window using GLFW
@@ -43,6 +49,16 @@ private:
     VkQueue graphicsQueue; // handle to interface with queue
     VkSurfaceKHR surface; // Abstract type of surface to present rendered images to. Must be created right after instance creation, because it can influence physical device selection
     VkQueue presentQueue; // handle to interface with presentation queue
+    VkSwapchainKHR swapChain; // swap chain object
+    std::vector<VkImage> swapChainImages; // storage for handles to the VkImages in the swap chain
+    VkFormat swapChainImageFormat; // image format of the swap chain
+    VkExtent2D swapChainExtent; // extent of the swap chain
+    std::vector<VkImageView> swapChainImageViews; // container for image views, so VkImage can be accessed
+    VkRenderPass renderPass; // render pass object
+    VkPipelineLayout pipelineLayout; // defines the rendering pipeline
+    VkPipeline graphicsPipeline; // graphics pipeline object
+    std::vector<VkFramebuffer> swapChainFramebuffers; // vector to hold the framebuffers
+    VkCommandPool commandPool; // manages the memory that is used to store the buffers and command buffers are allocated from it
 };
 
 #endif //HELLOTRIANGLE_H
