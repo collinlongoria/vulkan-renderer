@@ -22,6 +22,7 @@ private:
     void initWindow();
     void initVulkan();
     void mainLoop();
+    void drawFrame();
     void cleanup();
 
     // HELPER FUNCTIONS FOR VULKAN RENDERING
@@ -39,6 +40,9 @@ private:
     void createGraphicsPipeline(); // creates the graphics pipeline
     void createFramebuffers(); // creates frame buffers
     void createCommandPool(); // creates command pool
+    void createCommandBuffer(); // creates the command buffer
+    void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index); // writes commands we want to execute into a command buffer
+    void createSyncObjects();
 
     // VARIABLES
     GLFWwindow* window; // The main window using GLFW
@@ -59,6 +63,10 @@ private:
     VkPipeline graphicsPipeline; // graphics pipeline object
     std::vector<VkFramebuffer> swapChainFramebuffers; // vector to hold the framebuffers
     VkCommandPool commandPool; // manages the memory that is used to store the buffers and command buffers are allocated from it
+    VkCommandBuffer commandBuffer; // command buffer
+    VkSemaphore imageAvailableSemaphore;
+    VkSemaphore renderFinishedSemaphore;
+    VkFence inFlightFence;
 };
 
 #endif //HELLOTRIANGLE_H
