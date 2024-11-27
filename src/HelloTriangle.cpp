@@ -12,6 +12,57 @@
 #include <algorithm> // clamp
 #include <fstream> // file
 #include <queue>
+#include <array>
+#include <glm/glm.hpp>
+
+// vertex struct - would put this in a math.cpp, but this is just a tutorial
+struct Vertex {
+    glm::vec2 pos;
+    glm::vec3 color;
+
+    // describes at which rate to load data from memory throughout the vertices
+    static VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription = {};
+
+        // all per vertex data is packed together in one array, so only one binding
+        /*
+         * VK_VERTEX_INPUT_RATE_VERTEX: move to the next data entry after each vertex
+         * VK_VERTEX_INPUT_RATE_INSTANCE: move to the next data entry after each instance
+         */
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Vertex);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    // describes how to handle vertex input
+    // number is 2 because there is two attributes, position and color
+    static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+
+        // position
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+        // color
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+        return attributeDescriptions;
+    }
+};
+
+// basic vertices used by this triangle
+const std::vector<Vertex> vertices = {
+  {{0.0f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+    {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
+    {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}
+};
 
 // constants for window resolution
 const uint32_t WIDTH = 800;
@@ -336,6 +387,11 @@ static bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
     // other ways of finding suitable GPU could be mapping scores to available cards, or simply allow user to choose from list of valid cards.
 }
 
+/* resize framebuffer callback for GLFW */
+static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+    auto app = reinterpret_cast<HelloTriangle*>(glfwGetWindowUserPointer(window));
+    app->framebufferResized = true;
+}
 
 /* Class-Specific Function Definitions: */
 
@@ -355,10 +411,12 @@ void HelloTriangle::initWindow() {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
     // handling resized window takes special care, so disable it for now
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     // create the actual window
     window = glfwCreateWindow(WIDTH, HEIGHT, "VulkanRenderer", nullptr, nullptr);
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
 
 }
 
@@ -397,13 +455,18 @@ void HelloTriangle::initVulkan() {
     createCommandPool();
 
     // create a command buffer
-    createCommandBuffer();
+    createCommandBuffers();
 
     // create sempahores and fences
     createSyncObjects();
 }
 
 void HelloTriangle::createSyncObjects() {
+    // resize vectors
+    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+
     // create semaphore info
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -414,10 +477,12 @@ void HelloTriangle::createSyncObjects() {
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
     // create the objects
-    if(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphore) != VK_SUCCESS ||
-       vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphore) != VK_SUCCESS ||
-       vkCreateFence(device, &fenceInfo, nullptr, &inFlightFence) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create semaphores and fence");
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        if(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+           vkCreateSemaphore(device, &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+           vkCreateFence(device, &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to create semaphores and fence");
+        }
     }
 }
 
@@ -441,7 +506,9 @@ void HelloTriangle::createCommandPool() {
     }
 }
 
-void HelloTriangle::createCommandBuffer() {
+void HelloTriangle::createCommandBuffers() {
+    commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = commandPool;
@@ -451,9 +518,9 @@ void HelloTriangle::createCommandBuffer() {
      * VK_COMMAND_BUFFER_LEVEL_SECONDARY: Cannot be submitted directly, but can be called from primary command buffers
      */
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
+    allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
 
-    if(vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer) != VK_SUCCESS) {
+    if(vkAllocateCommandBuffers(device, &allocInfo, commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("failed to allocate command buffers");
     }
 }
@@ -496,10 +563,10 @@ void HelloTriangle::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t
      * VK_SUBPASS_CONTENTS_INLINE: The render pass commands will be embedded in the primary command buffer itself and no secondary command buffers will be executed
      * VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS: The render pass commands will be executed from secondary command buffers
      */
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    vkCmdBeginRenderPass(command_buffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     // bind graphics pipeline
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
+    vkCmdBindPipeline(command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
     // earlier, set viewport to be dynamic, so define it here
     VkViewport viewport{};
@@ -509,12 +576,12 @@ void HelloTriangle::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t
     viewport.height = static_cast<float>(swapChainExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+    vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {0, 0};
     scissor.extent = swapChainExtent;
-    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+    vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
     /*
      * Draw args:
@@ -523,13 +590,13 @@ void HelloTriangle::recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t
      * firstVertex - offset into a vertex buffer, defines lowest value of gl_VertexINdex
      * firstInstance - defines lowest value of gl_InstanceIndex
      */
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    vkCmdDraw(command_buffer, 3, 1, 0, 0);
 
     // end render pass
-    vkCmdEndRenderPass(commandBuffer);
+    vkCmdEndRenderPass(command_buffer);
 
     // end recording command buffer
-    if(vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
+    if(vkEndCommandBuffer(command_buffer) != VK_SUCCESS) {
         throw std::runtime_error("failed to record command buffers");
     }
 }
@@ -653,13 +720,18 @@ void HelloTriangle::createGraphicsPipeline() {
      * Bindings: spacing between data and whether the data is per-vertex or per-instance
      * Attribute Descriptions: type of the attributes passed to the vertex shader, which binding to load them from and at which offset
      */
-    // this application loads vertex data directly in the vertex shader, so specify no vertex data to load for now
+    // create vertexInputInfo struct
     VkPipelineVertexInputStateCreateInfo vertexInputInfo = {};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertexInputInfo.vertexBindingDescriptionCount = 0;
-    vertexInputInfo.pVertexBindingDescriptions = nullptr; // optional, point to an array of structs that describe the details for loading vertex data
-    vertexInputInfo.vertexAttributeDescriptionCount = 0;
-    vertexInputInfo.pVertexAttributeDescriptions = nullptr; // optional, point to an array of structs that describe the details for loading vertex data
+
+    // reference currently used vertex descriptions
+    auto bindingDescription = Vertex::getBindingDescription();
+    auto attributeDescription = Vertex::getAttributeDescriptions();
+    // populate struct
+    vertexInputInfo.vertexBindingDescriptionCount = 1;
+    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription; // optional, point to an array of structs that describe the details for loading vertex data
+    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescription.size());
+    vertexInputInfo.pVertexAttributeDescriptions = attributeDescription.data(); // optional, point to an array of structs that describe the details for loading vertex data
 
     // input assembly struct to describe what kind of geometry will be drawn from the vertices and if primitive restart should be enabled
     /*
@@ -1239,37 +1311,46 @@ void HelloTriangle::mainLoop() {
 
 void HelloTriangle::drawFrame() {
     // wait for previous frame
-    vkWaitForFences(device, 1, &inFlightFence, VK_TRUE, UINT64_MAX);
-    vkResetFences(device, 1, &inFlightFence);
+    vkWaitForFences(device, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     // acquire image from swap chain
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+    VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    if(result == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreateSwapChain();
+        return;
+    }
+    else if(result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire swap chain image!");
+    }
+
+    // only reset the fence if we are submitting work (or else result in deadlock)
+    vkResetFences(device, 1, &inFlightFences[currentFrame]);
 
     // reset command buffer
-    vkResetCommandBuffer(commandBuffer, 0);
+    vkResetCommandBuffer(commandBuffers[currentFrame], 0);
 
     // record command buffer
-    recordCommandBuffer(commandBuffer, imageIndex);
+    recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
 
     // submit the command buffer
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
     VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
     submitInfo.pWaitSemaphores = waitSemaphores;
     submitInfo.pWaitDstStageMask = waitStages;
 
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &commandBuffer;
+    submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
 
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if(vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFence) != VK_SUCCESS) {
+    if(vkQueueSubmit(graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("failed to submit draw command buffer!");
     }
 
@@ -1291,22 +1372,55 @@ void HelloTriangle::drawFrame() {
     presentInfo.pResults = nullptr; // optional
 
     // submit the request to present an image to the swap chain
-    vkQueuePresentKHR(presentQueue, &presentInfo);
+    result = vkQueuePresentKHR(presentQueue, &presentInfo);
+    if(result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || framebufferResized) {
+        framebufferResized = false;
+        recreateSwapChain();
+    }
+    else if(result != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
+
+    // advance to the next frame
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+}
+
+void HelloTriangle::cleanupSwapChain() {
+    // destory frame buffers
+    for(size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+        vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+    }
+
+    // destory image views (did not need to destroy images as they were not explicitly created by me)
+    for(size_t i = 0; i < swapChainImageViews.size(); i++) {
+        vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+    }
+
+    vkDestroySwapchainKHR(device, swapChain, nullptr);
+}
+
+
+void HelloTriangle::recreateSwapChain() {
+    // handle minimization
+    int width = 0, height = 0;
+    glfwGetFramebufferSize(window, &width, &height);
+    while(width == 0 || height == 0) {
+        glfwGetWindowSize(window, &width, &height);
+        glfwWaitEvents();
+    }
+
+    vkDeviceWaitIdle(device);
+
+    cleanupSwapChain();
+
+    createSwapChain();
+    createImageViews();
+    createFramebuffers();
 }
 
 void HelloTriangle::cleanup() {
-    // desroy semaphores and fences
-    vkDestroySemaphore(device, imageAvailableSemaphore, nullptr);
-    vkDestroySemaphore(device, renderFinishedSemaphore, nullptr);
-    vkDestroyFence(device, inFlightFence, nullptr);
-
-    // destroy command pool
-    vkDestroyCommandPool(device, commandPool, nullptr);
-
-    // destory frame buffers
-    for (auto framebuffer : swapChainFramebuffers) {
-        vkDestroyFramebuffer(device, framebuffer, nullptr);
-    }
+    // swap chain must be destroyed before the device
+    cleanupSwapChain();
 
     // destory pipeline
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
@@ -1315,13 +1429,15 @@ void HelloTriangle::cleanup() {
     // destory render pass
     vkDestroyRenderPass(device, renderPass, nullptr);
 
-    // destory image views (did not need to destroy images as they were not explicitly created by me)
-    for(auto imageView : swapChainImageViews) {
-        vkDestroyImageView(device, imageView, nullptr);
+    // desroy semaphores and fences
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+        vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+        vkDestroyFence(device, inFlightFences[i], nullptr);
     }
 
-    // swap chain must be destroyed before the device
-    vkDestroySwapchainKHR(device, swapChain, nullptr);
+    // destroy command pool
+    vkDestroyCommandPool(device, commandPool, nullptr);
 
     // Can destroy this before instance since logical devices do not interact directly with instances
     vkDestroyDevice(device, nullptr);

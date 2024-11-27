@@ -17,6 +17,8 @@ class HelloTriangle {
 public:
     // FUNCTIONS
     void run();
+
+    bool framebufferResized = false; // bool set to explicitly handle window resizes
 private:
     // FUNCTIONS
     void initWindow();
@@ -40,9 +42,11 @@ private:
     void createGraphicsPipeline(); // creates the graphics pipeline
     void createFramebuffers(); // creates frame buffers
     void createCommandPool(); // creates command pool
-    void createCommandBuffer(); // creates the command buffer
+    void createCommandBuffers(); // creates the command buffer
     void recordCommandBuffer(VkCommandBuffer command_buffer, uint32_t image_index); // writes commands we want to execute into a command buffer
     void createSyncObjects();
+    void recreateSwapChain(); // recreates the swap chain by calling other related functions
+    void cleanupSwapChain(); // encapsulates some clean up code related to swap chain
 
     // VARIABLES
     GLFWwindow* window; // The main window using GLFW
@@ -63,10 +67,12 @@ private:
     VkPipeline graphicsPipeline; // graphics pipeline object
     std::vector<VkFramebuffer> swapChainFramebuffers; // vector to hold the framebuffers
     VkCommandPool commandPool; // manages the memory that is used to store the buffers and command buffers are allocated from it
-    VkCommandBuffer commandBuffer; // command buffer
-    VkSemaphore imageAvailableSemaphore;
-    VkSemaphore renderFinishedSemaphore;
-    VkFence inFlightFence;
+    std::vector<VkCommandBuffer> commandBuffers; // command buffer
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+    uint32_t currentFrame = 0;
+
 };
 
 #endif //HELLOTRIANGLE_H
